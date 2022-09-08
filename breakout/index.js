@@ -1,11 +1,14 @@
 const grid = document.querySelector('.grid');
+const scoreDisplay = document.querySelector('#score');
 const blockWidth = 100;
 const blockHeigth = 20;
 const boardWidth = 560;
+const boardHeight = 300;
 const ballDiameter = 20;
 let timerId;
-let xDirection = 2;
+let xDirection = -2;
 let yDirection = 2;
+let score = 0;
 
 const userStart = [230, 10];
 let currentPosition = userStart;
@@ -113,15 +116,68 @@ timerId = setInterval(moveBall, 30);
 
 // check for collisions
 function checkForCollisions() {
+  //check for block collisions
+  for (let i=0; i<blocks.length; i++) {
+    if (
+      (ballCurrentPosition[0] > blocks[i].bottomLeft[0] && ballCurrentPosition[0] < blocks[i].bottomRigth[0]) &&
+      ((ballCurrentPosition[1] + ballDiameter) > blocks[i].bottomLeft[1] && ballCurrentPosition[1] < blocks[i].topLeft[1])
+    ){
+      const allBlocks = Array.from(document.querySelectorAll('.block'));
+      allBlocks[i].classList.remove('block');
+      blocks.splice(i, 1);
+      changeDirection();
+      score++;
+      scoreDisplay.textContent = score;
+
+      //check for win
+      if (blocks.length === 0) {
+        scoreDisplay.textContent = 'YOU WIN';
+        clearInterval(timerId);
+        document.removeEventListener('keydown', moveUser);
+      }
+    }
+  }
+
   //check for will collisions
-  if (ballCurrentPosition[0] >= (boardWidth - ballDiameter)) {
+  if (
+    ballCurrentPosition[0] >= (boardWidth - ballDiameter) || 
+    ballCurrentPosition[1] >= (boardHeight - ballDiameter) ||
+    ballCurrentPosition[0] <= 0
+    ) {
     changeDirection();
+  }
+
+  //check for user collisions
+  if (
+    (ballCurrentPosition[0] > currentPosition[0] && ballCurrentPosition[0] < currentPosition[0] + blockWidth) && 
+    (ballCurrentPosition[1] > currentPosition[1] && ballCurrentPosition[1] < currentPosition[1] + blockHeigth)
+  ){
+    changeDirection();
+  }
+
+  // check for game over
+  if (ballCurrentPosition[1] <= 0) {
+    clearInterval(timerId);
+    scoreDisplay.textContent = 'You lose';
+    document.removeEventListener('keydown', moveUser);
   }
 }
 
 function changeDirection() {
-  if (xDirection == 2 && yDirection == 2) {
+  if (xDirection === 2 && yDirection === 2) {
     yDirection = -2;
+    return;
+  }
+  if (xDirection === 2 && yDirection === -2) {
+    xDirection = -2;
+    return;
+  }
+  if (xDirection === -2 && yDirection === -2) {
+    yDirection = 2;
+    return;
+  }
+  if (xDirection === -2 && yDirection === 2) {
+    xDirection = 2;
     return;
   }
 }
